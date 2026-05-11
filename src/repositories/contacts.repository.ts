@@ -1,0 +1,37 @@
+import pool from "../database/db";
+
+type Contact = {
+  id_contact: number;
+  id_user: number;
+  name: string;
+  fone: string;
+};
+
+async function insertContact(idUser: number, name: string, fone: string): Promise<Contact | null> {
+  const result = await pool.query<Contact>(
+    `INSERT INTO public.contacts (id_user, name, fone)
+         VALUES ($1, $2, $3)
+      RETURNING id_contact, id_user, name, fone`,
+    [idUser, name, fone],
+  );
+
+  return result.rows[0] || null;
+}
+
+async function findContactsByUserId(idUser: number): Promise<Contact[]> {
+  const result = await pool.query<Contact>(
+    `SELECT id_contact, id_user, name, fone
+       FROM public.contacts
+      WHERE id_user = $1
+      ORDER BY name`,
+    [idUser],
+  );
+
+  return result.rows;
+}
+
+export {
+  type Contact,
+  findContactsByUserId,
+  insertContact,
+};
