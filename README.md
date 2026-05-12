@@ -103,6 +103,43 @@ Resposta esperada:
 }
 ```
 
+### Atualizar email do usuário logado
+
+Substitua `JWT_GERADO` pelo token retornado no login:
+
+```bash
+curl -X PATCH http://localhost:3001/api/users/email \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer JWT_GERADO" \
+  -d '{"email":"usuario1-novo@email.com"}'
+```
+
+Resposta esperada:
+
+```json
+{
+  "id_user": 1,
+  "email": "usuario1-novo@email.com"
+}
+```
+
+### Atualizar senha do usuário logado
+
+```bash
+curl -X PATCH http://localhost:3001/api/users/password \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer JWT_GERADO" \
+  -d '{"password":"nova-senha"}'
+```
+
+Resposta esperada:
+
+```json
+{
+  "message": "Senha atualizada com sucesso."
+}
+```
+
 ### Criar contato do usuário logado
 
 Substitua `JWT_GERADO` pelo token retornado no login:
