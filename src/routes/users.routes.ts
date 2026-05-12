@@ -4,9 +4,9 @@ import { authMiddleware } from "../middlewares/auth.middleware";
 
 const usersRouter = Router();
 
-usersRouter.post("/users", createUser);
-usersRouter.patch("/users/email", authMiddleware, updateEmail);
-usersRouter.patch("/users/password", authMiddleware, updatePassword);
+usersRouter.post("/", createUser);
+usersRouter.patch("/email", authMiddleware, updateEmail);
+usersRouter.patch("/password", authMiddleware, updatePassword);
 
 export {
   usersRouter,

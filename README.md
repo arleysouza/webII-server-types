@@ -50,6 +50,15 @@ Esse comando compila o TypeScript e executa:
 - `src/infra/init/schema-sql.sql`: cria as tabelas `users` e `contacts`
 - `src/infra/init/seed-data.sql`: limpa as tabelas e insere dados iniciais
 
+## Organização do código
+
+- `routes`: definem os endpoints e os middlewares de cada rota.
+- `controllers`: tratam `request`, `response`, status HTTP e validações de entrada.
+- `services`: concentram regras de negócio e orquestram repositories e utils.
+- `repositories`: executam consultas SQL e acessam o PostgreSQL.
+- `middlewares`: executam passos comuns antes dos controllers, como autenticação.
+- `utils`: agrupam funções auxiliares de JWT e senha.
+
 ## Subir o projeto
 
 Execute:
@@ -182,6 +191,61 @@ Resposta esperada:
 ]
 ```
 
+### Atualizar nome do contato
+
+```bash
+curl -X PATCH http://localhost:3001/api/contacts/1/name \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer JWT_GERADO" \
+  -d '{"name":"Maria Souza"}'
+```
+
+Resposta esperada:
+
+```json
+{
+  "id_contact": 1,
+  "id_user": 1,
+  "name": "Maria Souza",
+  "fone": "(12) 900010001"
+}
+```
+
+### Atualizar telefone do contato
+
+```bash
+curl -X PATCH http://localhost:3001/api/contacts/1/fone \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer JWT_GERADO" \
+  -d '{"fone":"(12)98888-7777"}'
+```
+
+Resposta esperada:
+
+```json
+{
+  "id_contact": 1,
+  "id_user": 1,
+  "name": "Maria Souza",
+  "fone": "(12)98888-7777"
+}
+```
+
+### Excluir contato
+
+```bash
+curl -X DELETE http://localhost:3001/api/contacts/1 \
+  -H "Authorization: Bearer JWT_GERADO"
+```
+
+Resposta esperada:
+
+```json
+{
+  "message": "Contato excluído com sucesso."
+}
+```
+
 ## Diagrama do BD
 
 ```mermaid
@@ -211,6 +275,7 @@ flowchart TD
   Routes[Routes]
   AuthMiddleware[Auth Middleware]
   Controllers[Controllers]
+  Services[Services]
   Repositories[Repositories]
   Utils[Utils JWT e Password]
   Database[(PostgreSQL)]
@@ -221,8 +286,9 @@ flowchart TD
   Routes --> Controllers
   AuthMiddleware --> Utils
   AuthMiddleware --> Controllers
-  Controllers --> Repositories
-  Controllers --> Utils
+  Controllers --> Services
+  Services --> Repositories
+  Services --> Utils
   Repositories --> Database
 ```
 
@@ -235,6 +301,7 @@ sequenceDiagram
   actor Client as Cliente
   participant Router as Users Router
   participant Controller as Users Controller
+  participant Service as Users Service
   participant Repository as Users Repository
   participant Password as Password Utils
   participant DB as PostgreSQL
@@ -242,12 +309,14 @@ sequenceDiagram
   Client->>Router: POST /api/users
   Router->>Controller: createUser(request, response)
   Controller->>Controller: valida email e password
-  Controller->>Repository: insertUsuario(email, password)
-  Repository->>Password: hashPassword(password)
-  Password-->>Repository: password hash
+  Controller->>Service: createUser(email, password)
+  Service->>Password: hashPassword(password)
+  Password-->>Service: password hash
+  Service->>Repository: insertUsuario(email, passwordHash)
   Repository->>DB: INSERT INTO users
   DB-->>Repository: id_user, email
-  Repository-->>Controller: user
+  Repository-->>Service: user
+  Service-->>Controller: user
   Controller-->>Client: 201 Created
 ```
 
@@ -258,6 +327,7 @@ sequenceDiagram
   actor Client as Cliente
   participant Router as Auth Router
   participant Controller as Auth Controller
+  participant Service as Auth Service
   participant Repository as Users Repository
   participant Password as Password Utils
   participant JWT as JWT Utils
@@ -266,14 +336,16 @@ sequenceDiagram
   Client->>Router: POST /api/login
   Router->>Controller: login(request, response)
   Controller->>Controller: valida email e password
-  Controller->>Repository: findUserByEmail(email)
+  Controller->>Service: authenticateUser(email, password)
+  Service->>Repository: findUserByEmail(email)
   Repository->>DB: SELECT user by email
   DB-->>Repository: user com password
-  Repository-->>Controller: user
-  Controller->>Password: verifyPassword(password, user.password)
-  Password-->>Controller: boolean
-  Controller->>JWT: createToken({ id_user, email })
-  JWT-->>Controller: token
+  Repository-->>Service: user
+  Service->>Password: verifyPassword(password, user.password)
+  Password-->>Service: boolean
+  Service->>JWT: createToken({ id_user, email })
+  JWT-->>Service: token
+  Service-->>Controller: token e user
   Controller-->>Client: 200 OK com token
 ```
 
@@ -286,6 +358,7 @@ sequenceDiagram
   participant Middleware as Auth Middleware
   participant JWT as JWT Utils
   participant Controller as Contacts Controller
+  participant Service as Contacts Service
   participant Repository as Contacts Repository
   participant DB as PostgreSQL
 
@@ -295,10 +368,12 @@ sequenceDiagram
   JWT-->>Middleware: id_user, email
   Middleware->>Controller: createContact com request.user
   Controller->>Controller: valida name e fone
-  Controller->>Repository: insertContact(id_user, name, fone)
+  Controller->>Service: createContact(id_user, name, fone)
+  Service->>Repository: insertContact(id_user, name, fone)
   Repository->>DB: INSERT INTO contacts
   DB-->>Repository: contact
-  Repository-->>Controller: contact
+  Repository-->>Service: contact
+  Service-->>Controller: contact
   Controller-->>Client: 201 Created
 ```
 
@@ -311,6 +386,7 @@ sequenceDiagram
   participant Middleware as Auth Middleware
   participant JWT as JWT Utils
   participant Controller as Contacts Controller
+  participant Service as Contacts Service
   participant Repository as Contacts Repository
   participant DB as PostgreSQL
 
@@ -319,9 +395,11 @@ sequenceDiagram
   Middleware->>JWT: verifyToken(token)
   JWT-->>Middleware: id_user, email
   Middleware->>Controller: listContacts com request.user
-  Controller->>Repository: findContactsByUserId(id_user)
+  Controller->>Service: listContacts(id_user)
+  Service->>Repository: findContactsByUserId(id_user)
   Repository->>DB: SELECT contacts WHERE id_user = $1
   DB-->>Repository: contacts
-  Repository-->>Controller: contacts
+  Repository-->>Service: contacts
+  Service-->>Controller: contacts
   Controller-->>Client: 200 OK com contatos
 ```

@@ -6,8 +6,8 @@ import { usersRouter } from "./users.routes";
 const router = Router();
 
 router.use(authRouter);
-router.use(usersRouter);
-router.use(contactsRouter);
+router.use("/users", usersRouter);
+router.use("/contacts", contactsRouter);
 
 export {
   router,

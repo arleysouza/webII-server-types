@@ -2,11 +2,15 @@ import type { NextFunction, Request, Response } from "express";
 import { type TokenPayload, verifyToken } from "../utils/jwt";
 
 type AuthenticatedRequest = Request & {
+  user: TokenPayload;
+};
+
+type RequestWithOptionalUser = Request & {
   user?: TokenPayload;
 };
 
 function authMiddleware(
-  request: AuthenticatedRequest,
+  request: RequestWithOptionalUser,
   response: Response,
   next: NextFunction,
 ): void {

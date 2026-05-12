@@ -1,6 +1,10 @@
 import type { Request, Response } from "express";
 import type { AuthenticatedRequest } from "../middlewares/auth.middleware";
-import { insertUsuario, updateUserEmail, updateUserPassword } from "../repositories/users.repository";
+import {
+  changeUserEmail,
+  changeUserPassword,
+  createUser as createUserService,
+} from "../services/users.service";
 
 type CreateUserBody = {
   email?: string;
@@ -26,7 +30,7 @@ async function createUser(
     return;
   }
 
-  const user = await insertUsuario(email, password);
+  const user = await createUserService(email, password);
 
   response.status(201).json(user);
 }
@@ -36,19 +40,14 @@ async function updateEmail(
   response: Response,
 ): Promise<void> {
   const { email } = request.body;
-  const idUser = request.user?.id_user;
-
-  if (!idUser) {
-    response.status(401).json({ message: "Usuário não autenticado." });
-    return;
-  }
+  const idUser = request.user.id_user;
 
   if (!email) {
     response.status(400).json({ message: "Email é obrigatório." });
     return;
   }
 
-  const user = await updateUserEmail(idUser, email);
+  const user = await changeUserEmail(idUser, email);
 
   if (!user) {
     response.status(404).json({ message: "Usuário não encontrado." });
@@ -63,19 +62,14 @@ async function updatePassword(
   response: Response,
 ): Promise<void> {
   const { password } = request.body;
-  const idUser = request.user?.id_user;
-
-  if (!idUser) {
-    response.status(401).json({ message: "Usuário não autenticado." });
-    return;
-  }
+  const idUser = request.user.id_user;
 
   if (!password) {
     response.status(400).json({ message: "Senha é obrigatória." });
     return;
   }
 
-  const user = await updateUserPassword(idUser, password);
+  const user = await changeUserPassword(idUser, password);
 
   if (!user) {
     response.status(404).json({ message: "Usuário não encontrado." });

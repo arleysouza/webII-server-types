@@ -1,5 +1,4 @@
 import pool from "../database/db";
-import { hashPassword } from "../utils/password";
 
 type User = {
   id_user: number;
@@ -11,13 +10,11 @@ type UserWithPassword = User & {
 };
 
 async function insertUsuario(email: string, password: string): Promise<User | null> {
-  const passwordEncoded = await hashPassword(password);
-
   const result = await pool.query(
     `INSERT INTO public.users (email, password)
          VALUES ($1, $2)
          RETURNING id_user, email`,
-    [email, passwordEncoded],
+    [email, password],
   );
 
   return result.rows[0] || null;
@@ -47,14 +44,12 @@ async function updateUserEmail(idUser: number, email: string): Promise<User | nu
 }
 
 async function updateUserPassword(idUser: number, password: string): Promise<User | null> {
-  const passwordEncoded = await hashPassword(password);
-
   const result = await pool.query<User>(
     `UPDATE public.users
         SET password = $2
       WHERE id_user = $1
       RETURNING id_user, email`,
-    [idUser, passwordEncoded],
+    [idUser, password],
   );
 
   return result.rows[0] || null;

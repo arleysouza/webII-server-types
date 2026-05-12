@@ -1,7 +1,5 @@
 import type { Request, Response } from "express";
-import { findUserByEmail } from "../repositories/users.repository";
-import { createToken } from "../utils/jwt";
-import { verifyPassword } from "../utils/password";
+import { authenticateUser } from "../services/auth.service";
 
 type LoginBody = {
   email?: string;
@@ -19,25 +17,14 @@ async function login(
     return;
   }
 
-  const user = await findUserByEmail(email);
+  const loginResult = await authenticateUser(email, password);
 
-  if (!user || !verifyPassword(password, user.password)) {
+  if (!loginResult) {
     response.status(401).json({ message: "Email ou senha inválidos." });
     return;
   }
 
-  const token = createToken({
-    id_user: user.id_user,
-    email: user.email,
-  });
-
-  response.json({
-    token,
-    user: {
-      id_user: user.id_user,
-      email: user.email,
-    },
-  });
+  response.json(loginResult);
 }
 
 export {
