@@ -1,4 +1,5 @@
-import type { Response } from "express";
+import type { RequestHandler } from "express";
+import type { ParamsDictionary } from "express-serve-static-core";
 import type { AuthenticatedRequest } from "../middlewares/auth.middleware";
 import {
   changeContactFone,
@@ -26,12 +27,12 @@ type UpdateContactFoneBody = {
   fone?: string;
 };
 
-async function createContact(
-  request: AuthenticatedRequest & { body: CreateContactBody },
-  response: Response,
-): Promise<void> {
+const createContact: RequestHandler<ParamsDictionary, unknown, CreateContactBody> = async (
+  request,
+  response,
+): Promise<void> => {
   const { name, fone } = request.body;
-  const idUser = request.user.id_user;
+  const idUser = (request as AuthenticatedRequest).user.id_user;
 
   if (!name || !fone) {
     response.status(400).json({ message: "Nome e telefone são obrigatórios." });
@@ -41,25 +42,25 @@ async function createContact(
   const contact = await createContactService(idUser, name, fone);
 
   response.status(201).json(contact);
-}
+};
 
-async function listContacts(
-  request: AuthenticatedRequest,
-  response: Response,
-): Promise<void> {
-  const idUser = request.user.id_user;
+const listContacts: RequestHandler = async (
+  request,
+  response,
+): Promise<void> => {
+  const idUser = (request as AuthenticatedRequest).user.id_user;
 
   const contacts = await listContactsService(idUser);
 
   response.json(contacts);
-}
+};
 
-async function updateName(
-  request: AuthenticatedRequest & { params: ContactParams; body: UpdateContactNameBody },
-  response: Response,
-): Promise<void> {
+const updateName: RequestHandler<ContactParams, unknown, UpdateContactNameBody> = async (
+  request,
+  response,
+): Promise<void> => {
   const { name } = request.body;
-  const idUser = request.user.id_user;
+  const idUser = (request as AuthenticatedRequest).user.id_user;
   const idContact = parseContactId(request.params.id_contact);
 
   if (!idContact) {
@@ -80,14 +81,14 @@ async function updateName(
   }
 
   response.json(contact);
-}
+};
 
-async function updateFone(
-  request: AuthenticatedRequest & { params: ContactParams; body: UpdateContactFoneBody },
-  response: Response,
-): Promise<void> {
+const updateFone: RequestHandler<ContactParams, unknown, UpdateContactFoneBody> = async (
+  request,
+  response,
+): Promise<void> => {
   const { fone } = request.body;
-  const idUser = request.user.id_user;
+  const idUser = (request as AuthenticatedRequest).user.id_user;
   const idContact = parseContactId(request.params.id_contact);
 
   if (!idContact) {
@@ -108,13 +109,13 @@ async function updateFone(
   }
 
   response.json(contact);
-}
+};
 
-async function removeContact(
-  request: AuthenticatedRequest & { params: ContactParams },
-  response: Response,
-): Promise<void> {
-  const idUser = request.user.id_user;
+const removeContact: RequestHandler<ContactParams> = async (
+  request,
+  response,
+): Promise<void> => {
+  const idUser = (request as AuthenticatedRequest).user.id_user;
   const idContact = parseContactId(request.params.id_contact);
 
   if (!idContact) {
@@ -130,7 +131,7 @@ async function removeContact(
   }
 
   response.json({ message: "Contato excluído com sucesso." });
-}
+};
 
 export {
   createContact,

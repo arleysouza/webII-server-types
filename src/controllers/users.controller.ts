@@ -1,4 +1,5 @@
-import type { Request, Response } from "express";
+import type { Request, RequestHandler, Response } from "express";
+import type { ParamsDictionary } from "express-serve-static-core";
 import type { AuthenticatedRequest } from "../middlewares/auth.middleware";
 import {
   changeUserEmail,
@@ -35,12 +36,12 @@ async function createUser(
   response.status(201).json(user);
 }
 
-async function updateEmail(
-  request: AuthenticatedRequest & { body: UpdateEmailBody },
-  response: Response,
-): Promise<void> {
+const updateEmail: RequestHandler<ParamsDictionary, unknown, UpdateEmailBody> = async (
+  request,
+  response,
+): Promise<void> => {
   const { email } = request.body;
-  const idUser = request.user.id_user;
+  const idUser = (request as AuthenticatedRequest).user.id_user;
 
   if (!email) {
     response.status(400).json({ message: "Email é obrigatório." });
@@ -55,14 +56,14 @@ async function updateEmail(
   }
 
   response.json(user);
-}
+};
 
-async function updatePassword(
-  request: AuthenticatedRequest & { body: UpdatePasswordBody },
-  response: Response,
-): Promise<void> {
+const updatePassword: RequestHandler<ParamsDictionary, unknown, UpdatePasswordBody> = async (
+  request,
+  response,
+): Promise<void> => {
   const { password } = request.body;
-  const idUser = request.user.id_user;
+  const idUser = (request as AuthenticatedRequest).user.id_user;
 
   if (!password) {
     response.status(400).json({ message: "Senha é obrigatória." });
@@ -77,7 +78,7 @@ async function updatePassword(
   }
 
   response.json({ message: "Senha atualizada com sucesso." });
-}
+};
 
 export {
   createUser,
