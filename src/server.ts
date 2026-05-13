@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import path from "path";
 import express from "express";
+import cors from "cors";
 import { router } from "./routes";
 
 dotenv.config({
@@ -9,12 +10,14 @@ dotenv.config({
 });
 
 const PORT = process.env.PORT || 3000;
+const HOST = "0.0.0.0";
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 app.use("/api", router);
 
-app.listen(PORT, function () {
-  console.log(`Rodando em http://localhost:${PORT}`);
+app.listen(Number(PORT), HOST, function () {
+  console.log(`Rodando em http://${HOST}:${PORT}`);
 });
