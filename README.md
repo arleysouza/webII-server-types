@@ -73,6 +73,18 @@ Com o `.env` acima, a API ficará disponível em:
 http://localhost:3001
 ```
 
+## Por que esta aplicação é RESTful?
+
+Esta aplicação pode ser considerada uma API RESTful porque expõe recursos do sistema por meio de URLs e usa os métodos HTTP para indicar a operação que será realizada. Os principais recursos da aplicação são `users` e `contacts`, acessados por rotas como `/api/users` e `/api/contacts`.
+
+Em vez de chamar funções diretamente, o cliente interage com a API enviando requisições HTTP. Por exemplo, `POST /api/users` cria um usuário, `GET /api/contacts` lista os contatos do usuário autenticado, `POST /api/contacts` cria um novo contato, `PATCH /api/contacts/:id_contact/name` atualiza parte de um contato e `DELETE /api/contacts/:id_contact` remove um contato.
+
+A aplicação também retorna respostas em JSON e utiliza códigos de status HTTP para representar o resultado das operações, como `201 Created` ao criar registros, `400 Bad Request` quando faltam dados obrigatórios e `404 Not Found` quando um recurso não é encontrado.
+
+Outro ponto importante é que a API trabalha de forma stateless. Cada requisição para rotas protegidas precisa enviar o token JWT no cabeçalho `Authorization`, permitindo que o servidor identifique o usuário autenticado sem depender de uma sessão armazenada entre as requisições.
+
+Portanto, esta aplicação segue os principais princípios REST ao organizar suas funcionalidades em recursos, usar métodos HTTP adequados, retornar dados padronizados em JSON, aplicar status HTTP e manter a comunicação independente entre cliente e servidor.
+
 ## Rotas de teste
 
 ### Criar usuário
